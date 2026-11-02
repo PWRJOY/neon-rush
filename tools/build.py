@@ -32,6 +32,20 @@ ASSETS = [
 DRACO_WASM = os.path.join(ROOT, 'vendor', 'draco', 'draco_decoder.wasm')
 DRACO_WRAPPER = os.path.join(ROOT, 'vendor', 'draco', 'draco_wasm_wrapper.js')
 
+# Three.js 运行时与示例模块：内联进 HTML，保证断网也能直接双击游玩（顺序不能变）
+LIBS = [
+    os.path.join(ROOT, 'vendor', 'three', 'three.min.js'),
+    os.path.join(ROOT, 'vendor', 'three', 'Pass.js'),
+    os.path.join(ROOT, 'vendor', 'three', 'LuminosityHighPassShader.js'),
+    os.path.join(ROOT, 'vendor', 'three', 'CopyShader.js'),
+    os.path.join(ROOT, 'vendor', 'three', 'EffectComposer.js'),
+    os.path.join(ROOT, 'vendor', 'three', 'RenderPass.js'),
+    os.path.join(ROOT, 'vendor', 'three', 'ShaderPass.js'),
+    os.path.join(ROOT, 'vendor', 'three', 'UnrealBloomPass.js'),
+    os.path.join(ROOT, 'vendor', 'three', 'GLTFLoader.js'),
+    os.path.join(ROOT, 'vendor', 'three', 'DRACOLoader.js'),
+]
+
 
 def read(path):
     with io.open(path, encoding='utf-8') as f:
@@ -44,7 +58,7 @@ def b64(path):
 
 
 def main():
-    for path in [p for _, p in ASSETS] + [DRACO_WASM, DRACO_WRAPPER]:
+    for path in [p for _, p in ASSETS] + [DRACO_WASM, DRACO_WRAPPER] + LIBS:
         if not os.path.isfile(path):
             sys.exit('缺少资源文件: ' + path)
 
@@ -59,6 +73,13 @@ def main():
     lines.append('const DRACO_WASM_B64 = "%s";' % b64(DRACO_WASM))
     assets_block = '\n'.join(lines)
 
+    # 库文件各自包一个 <script>，转义 </script 防止提前闭合标签
+    libs_block = '\n'.join(
+        '<script>\n%s\n</script>' % read(path).replace('</script', '<\\/script')
+        for path in LIBS
+    )
+    print('  内联库: %d 个，%.2f MB' % (len(LIBS), sum(os.path.getsize(p) for p in LIBS) / 1048576.0))
+
     modules = sorted(f for f in os.listdir(GAME) if f.endswith('.js'))
     game_block = '\n\n'.join(
         '/* ===== src/game/%s ===== */\n' % name + read(os.path.join(GAME, name)).strip('\n')
@@ -68,7 +89,8 @@ def main():
 
     css_block = read(os.path.join(SRC, 'styles', 'main.css'))
     html = read(os.path.join(SRC, 'index.html'))
-    for token, block in (('/*__CSS__*/', css_block), ('/*__ASSETS__*/', assets_block), ('/*__GAME__*/', game_block)):
+    for token, block in (('/*__CSS__*/', css_block), ('/*__ASSETS__*/', assets_block),
+                         ('/*__GAME__*/', game_block), ('<!--__LIBS__-->', libs_block)):
         assert token in html, '模板缺少占位符 ' + token
         html = html.replace(token, block, 1)
 
