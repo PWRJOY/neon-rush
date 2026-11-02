@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "build": "python tools/build.py"
+  },
+  "dependencies": {
+    "draco3d": "^1.5.9",
+    "draco3dgltf": "^1.5.9",
+    "gltfpack": "^1.3.0"
+  }
+}

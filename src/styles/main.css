@@ -1,0 +1,185 @@
+/* ============================================================
+   霓虹狂飙 NEON RUSH — 页面样式（移动优先）
+   ============================================================ */
+:root{
+  --bg:#07080f;
+  --panel:rgba(13,16,32,.82);
+  --panel-solid:#0d1020;
+  --cyan:#00e5ff;
+  --pink:#ff2e88;
+  --amber:#ffb300;
+  --green:#00ff9d;
+  --red:#ff3b5c;
+  --text:#eaf6ff;
+  --dim:#8fa3b8;
+  --line:rgba(0,229,255,.22);
+  --font-display:'Orbitron','Segoe UI',system-ui,sans-serif;
+  --font-body:'PingFang SC','Microsoft YaHei','Segoe UI',system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font-body);}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
+button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-radius:6px}
+canvas#game{position:fixed;inset:0;width:100%;height:100%;display:block}
+
+/* ---------- 通用视图层 ---------- */
+.view{position:fixed;inset:0;z-index:10;pointer-events:none}
+.view > *{pointer-events:auto}
+.view.hidden{display:none}
+
+/* ---------- 菜单 ---------- */
+#view-menu{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;background:linear-gradient(180deg,rgba(7,8,15,.28),rgba(7,8,15,.5));overflow-y:auto}
+/* 宽屏时菜单内容在左栏，遮罩只压暗左侧，右侧展车区保持通透 */
+@media (min-width:1100px){
+  #view-menu{background:linear-gradient(90deg,rgba(7,8,15,.9) 0%,rgba(7,8,15,.78) 24%,rgba(7,8,15,.32) 44%,rgba(7,8,15,0) 62%),radial-gradient(ellipse at 18% 110%,rgba(0,229,255,.10),transparent 58%)}
+}
+#view-menu.hidden{display:none}
+.menu-top{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:10px 14px;pointer-events:none}
+.logo-mini{font-family:var(--font-display);font-weight:900;letter-spacing:.22em;font-size:12px;color:var(--cyan);text-shadow:0 0 12px rgba(0,229,255,.8)}
+.icon-btn{pointer-events:auto;width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--cyan);transition:all .18s}
+.icon-btn:hover{border-color:var(--cyan);box-shadow:0 0 14px rgba(0,229,255,.35)}
+.icon-btn.off{color:var(--dim);border-color:rgba(143,163,184,.25)}
+.icon-btn svg{width:20px;height:20px;fill:currentColor}
+
+.menu-wrap{width:100%;max-width:880px;display:flex;flex-direction:column;align-items:center;gap:16px;padding:64px 0 18px;min-height:100%}
+@media (min-width:1100px){.menu-wrap{width:min(440px,44vw);margin-right:auto;margin-left:9vw;align-items:flex-start}}
+.title{font-family:var(--font-display);font-weight:900;font-size:clamp(34px,7vw,60px);letter-spacing:.06em;line-height:1.05;background:linear-gradient(100deg,var(--cyan) 10%,#7df9ff 45%,var(--pink) 95%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 34px rgba(0,229,255,.25);text-align:center}
+.subtitle{font-family:var(--font-display);font-size:clamp(10px,2vw,13px);letter-spacing:.5em;color:var(--dim);text-align:center;text-transform:uppercase;margin-top:6px}
+
+/* 车辆选择 */
+.car-selector{width:100%;display:flex;align-items:stretch;justify-content:center;gap:8px;margin-top:6px}
+.arrow{width:46px;min-height:120px;border-radius:12px;border:1px solid var(--line);background:rgba(10,14,26,.55);color:var(--cyan);font-size:26px;font-family:var(--font-display);transition:all .18s}
+.arrow:hover{border-color:var(--cyan);box-shadow:0 0 16px rgba(0,229,255,.35);color:#fff}
+.car-card{flex:1;max-width:440px;background:rgba(10,14,26,.42);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;backdrop-filter:blur(6px)}
+.car-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.car-name{font-family:var(--font-display);font-weight:800;font-size:clamp(17px,3vw,22px);letter-spacing:.04em}
+.car-class{font-size:11px;color:var(--dim);margin-top:2px}
+.car-chip{width:34px;height:34px;border-radius:10px;flex:none;box-shadow:0 0 16px currentColor}
+.car-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:7px 14px}
+.stat{display:flex;flex-direction:column;gap:3px}
+.stat .lab{font-size:10px;color:var(--dim);letter-spacing:.12em}
+.stat .bar{height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}
+.stat .fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--cyan),var(--pink));transition:width .4s cubic-bezier(.22,1,.36,1)}
+.car-spec{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--dim)}
+.car-spec b{color:var(--text);font-weight:600}
+
+/* 赛道选择（左右切换单卡片，与赛车选择器一致） */
+.track-selector{width:100%;display:flex;align-items:stretch;justify-content:center;gap:8px}
+.track-row{flex:1;max-width:440px;display:block}
+.track-card{display:flex;gap:14px;align-items:center;background:rgba(10,14,26,.42);border:1px solid var(--line);border-radius:16px;padding:12px 16px;transition:all .18s;text-align:left;width:100%;backdrop-filter:blur(6px)}
+.track-card.sel{border-color:var(--cyan);box-shadow:0 0 18px rgba(0,229,255,.25)}
+.track-prev{width:108px;height:82px;flex:none;border-radius:8px;background:#0a0d18;display:flex;align-items:center;justify-content:center}
+.track-prev svg{width:100%;height:100%}
+.track-info{flex:1;min-width:0}
+.track-info h3{font-family:var(--font-display);font-size:15px;letter-spacing:.05em;color:var(--cyan)}
+.track-info p{font-size:12px;color:var(--dim);margin-top:2px;line-height:1.4}
+.track-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px;font-size:10px;color:var(--dim);align-items:center}
+.track-meta b{color:var(--text);font-weight:600}
+.track-idx{margin-left:auto;font-family:var(--font-display);color:var(--cyan);letter-spacing:.1em}
+
+/* 开始按钮 */
+.start-btn{font-family:var(--font-display);font-weight:900;font-size:clamp(16px,3vw,20px);letter-spacing:.3em;color:#04131a;background:linear-gradient(90deg,var(--cyan),#7df9ff);border-radius:14px;padding:15px 42px;box-shadow:0 0 26px rgba(0,229,255,.45),inset 0 0 0 1px rgba(255,255,255,.4);transition:transform .15s,box-shadow .15s;align-self:center}
+.start-btn:hover{transform:translateY(-2px);box-shadow:0 0 40px rgba(0,229,255,.7),inset 0 0 0 1px rgba(255,255,255,.5)}
+.start-btn:active{transform:translateY(0)}
+
+/* 操作说明 */
+.controls-hint{width:100%;display:grid;grid-template-columns:1fr;gap:8px}
+.hint-col{background:var(--panel);border:1px solid rgba(143,163,184,.18);border-radius:12px;padding:10px 12px}
+.hint-col h4{font-size:11px;letter-spacing:.2em;color:var(--pink);font-family:var(--font-display);margin-bottom:7px}
+.hint-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--dim);padding:3px 0}
+.hint-row b{color:var(--text);font-weight:600}
+.key{font-family:var(--font-display);font-size:11px;color:var(--cyan);background:rgba(0,229,255,.08);border:1px solid var(--line);border-radius:5px;padding:1px 7px;letter-spacing:.08em}
+.gp-status{margin-top:2px;font-size:11px;color:var(--dim);text-align:center}
+.gp-status.on{color:var(--green)}
+.legend-tip{margin-top:4px;font-size:11px;color:var(--dim);text-align:center;letter-spacing:.04em}
+
+/* ---------- HUD ---------- */
+#view-hud{background:none}
+.hud{position:absolute;inset:0;pointer-events:none}
+.hud-top-left{position:absolute;top:12px;left:12px;display:flex;flex-direction:column;gap:6px}
+.hud-chip{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 10px;backdrop-filter:blur(4px)}
+.hud-chip .lab{font-size:9px;letter-spacing:.18em;color:var(--dim)}
+.hud-chip .val{font-family:var(--font-display);font-weight:800;font-size:15px;color:var(--text);line-height:1.2}
+.hud-chip .val em{font-style:normal;color:var(--cyan)}
+.hud-top-right{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+#hudMute{pointer-events:auto}
+.countdown{position:absolute;top:22%;left:50%;transform:translateX(-50%);font-family:var(--font-display);font-weight:900;font-size:clamp(64px,14vw,120px);color:var(--cyan);text-shadow:0 0 34px rgba(0,229,255,.9);letter-spacing:.1em;display:none}
+.countdown.go{color:var(--green);text-shadow:0 0 34px rgba(0,255,157,.9)}
+.wrongway{position:absolute;top:34%;left:50%;transform:translateX(-50%);font-family:var(--font-display);font-weight:900;font-size:clamp(16px,3vw,24px);letter-spacing:.3em;color:var(--red);text-shadow:0 0 18px rgba(255,59,92,.8);display:none}
+.focus-hint{position:absolute;top:26%;left:50%;transform:translateX(-50%);z-index:30;font-size:clamp(13px,2.2vw,17px);letter-spacing:.06em;color:var(--amber);background:rgba(9,12,24,.78);border:1px solid rgba(255,179,0,.35);border-radius:8px;padding:9px 18px;display:none;text-align:center;pointer-events:none}
+.drift-pop{position:absolute;bottom:34%;left:50%;transform:translateX(-50%);font-family:var(--font-display);font-weight:900;font-size:22px;color:var(--amber);text-shadow:0 0 16px rgba(255,179,0,.8);opacity:0;pointer-events:none}
+.speed-panel{position:absolute;left:12px;bottom:12px;display:flex;flex-direction:column;gap:6px}
+.speed-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px 14px;display:flex;align-items:baseline;gap:8px;backdrop-filter:blur(4px)}
+.speed-num{font-family:var(--font-display);font-weight:900;font-size:clamp(34px,7vw,52px);color:#fff;line-height:1;text-shadow:0 0 20px rgba(0,229,255,.5)}
+.speed-unit{font-family:var(--font-display);font-size:12px;color:var(--dim);letter-spacing:.1em}
+.nitro-box{width:170px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 10px;backdrop-filter:blur(4px)}
+.nitro-lab{display:flex;justify-content:space-between;font-size:9px;letter-spacing:.18em;color:var(--dim);margin-bottom:4px}
+.nitro-lab b{color:var(--amber);font-family:var(--font-display)}
+.nitro-bar{height:7px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}
+.nitro-fill{height:100%;width:0;border-radius:4px;background:linear-gradient(90deg,var(--amber),#ffd866);transition:width .1s linear}
+.nitro-fill.boost{background:linear-gradient(90deg,#00e5ff,#b8f6ff);box-shadow:0 0 16px rgba(0,229,255,.85)}
+.minimap-box{position:absolute;right:12px;bottom:12px;width:150px;height:150px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px;backdrop-filter:blur(4px)}
+/* 沉浸模式：只保留速度/氮气与必要提示，画面更像"夜间兜风" */
+#view-hud.immersive .hud-top-left,#view-hud.immersive .hud-top-right,#view-hud.immersive .minimap-box,#view-hud.immersive #focusHint{display:none}
+#view-hud.immersive .speed-panel{opacity:.94}
+.minimap-box canvas{width:100%;height:100%;display:block}
+.minimap-tag{position:absolute;top:-6px;left:10px;font-size:9px;letter-spacing:.2em;color:var(--cyan);background:var(--bg);padding:0 6px;border-radius:4px;border:1px solid var(--line)}
+
+/* 暂停 */
+#pauseOverlay{position:absolute;inset:0;background:rgba(4,5,10,.72);display:none;align-items:center;justify-content:center;pointer-events:auto}
+#pauseOverlay.show{display:flex}
+.pause-panel{background:var(--panel-solid);border:1px solid var(--line);border-radius:18px;padding:26px 30px;display:flex;flex-direction:column;gap:14px;min-width:min(320px,82vw);box-shadow:0 0 40px rgba(0,0,0,.6)}
+.pause-panel h2{font-family:var(--font-display);letter-spacing:.3em;font-size:20px;color:var(--cyan);text-align:center}
+.menu-btn{font-size:15px;letter-spacing:.1em;padding:11px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.04);transition:all .15s}
+.menu-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.menu-btn.primary{background:linear-gradient(90deg,var(--cyan),#7df9ff);color:#04131a;font-family:var(--font-display);font-weight:800;letter-spacing:.2em;border:none}
+.menu-btn.danger:hover{border-color:var(--pink);color:var(--pink)}
+
+/* ---------- 结果 ---------- */
+#view-result{display:flex;align-items:center;justify-content:center;padding:16px;background:radial-gradient(ellipse at 50% 100%,rgba(255,46,136,.12),transparent 60%),rgba(7,8,15,.9);overflow-y:auto}
+#view-result.hidden{display:none}
+.result-panel{width:100%;max-width:640px;background:var(--panel-solid);border:1px solid var(--line);border-radius:20px;padding:24px 22px;display:flex;flex-direction:column;gap:14px;box-shadow:0 0 50px rgba(0,0,0,.6)}
+.result-head{display:flex;flex-direction:column;align-items:center;gap:4px}
+.result-title{font-family:var(--font-display);font-weight:900;font-size:clamp(22px,5vw,30px);letter-spacing:.15em}
+.result-title.win{color:var(--amber);text-shadow:0 0 26px rgba(255,179,0,.8)}
+.result-title.lose{color:var(--cyan);text-shadow:0 0 26px rgba(0,229,255,.7)}
+.result-sub{font-size:12px;color:var(--dim)}
+.standings{width:100%;border-collapse:collapse;font-size:13px}
+.standings th{font-size:10px;letter-spacing:.18em;color:var(--dim);text-align:left;padding:6px 8px;border-bottom:1px solid rgba(143,163,184,.25);font-weight:600}
+.standings td{padding:8px;border-bottom:1px solid rgba(143,163,184,.12)}
+.standings tr.me td{background:rgba(0,229,255,.08);color:var(--cyan)}
+.rank{font-family:var(--font-display);font-weight:800;width:34px;color:var(--dim)}
+.rank.r1{color:var(--amber)} .rank.r2{color:#d7dde6} .rank.r3{color:#c98a4b}
+.car-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;vertical-align:middle}
+.time-col{font-family:var(--font-display);font-size:12px;color:var(--dim);text-align:right}
+.result-btns{display:flex;gap:10px;justify-content:center;margin-top:6px}
+
+/* ---------- 大地图 ---------- */
+#toast{position:fixed;left:50%;bottom:18%;transform:translateX(-50%);z-index:120;background:rgba(6,10,20,.92);border:1px solid var(--amber);border-radius:12px;padding:10px 22px;font-size:13px;letter-spacing:.08em;color:var(--amber);opacity:0;pointer-events:none;transition:opacity .25s}
+#toast.show{opacity:1}
+#mapOverlay{background:rgba(4,5,10,.82);display:none;align-items:center;justify-content:center;padding:16px;pointer-events:auto}
+#mapOverlay.show{display:flex}
+.map-panel{width:min(680px,94vw);background:var(--panel-solid);border:1px solid var(--line);border-radius:18px;padding:14px;position:relative}
+.map-panel h3{font-family:var(--font-display);font-size:14px;letter-spacing:.2em;color:var(--cyan);margin-bottom:8px;text-align:center}
+.map-panel canvas{width:100%;display:block;border-radius:10px;background:#0a0d18}
+.map-close{position:absolute;top:8px;right:8px;width:34px;height:34px;border-radius:8px;border:1px solid var(--line);color:var(--cyan);font-size:16px}
+.map-legend{display:flex;justify-content:center;gap:16px;margin-top:8px;font-size:11px;color:var(--dim)}
+.map-legend span{display:flex;align-items:center;gap:5px}
+.map-legend i{display:inline-block;width:10px;height:10px;border-radius:3px}
+
+/* 速度线 */
+#speedLines{position:absolute;inset:0;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,229,255,.14) 100%)}
+
+@media (min-width:768px){
+  .controls-hint{grid-template-columns:1fr 1fr}
+  .menu-wrap{gap:20px}
+  .hud-top-left{top:16px;left:16px}
+  .hud-top-right{top:16px;right:16px}
+  .speed-panel{left:16px;bottom:16px}
+  .minimap-box{right:16px;bottom:16px}
+}
+@media (max-width:480px){
+  .arrow{width:38px;min-height:96px}
+  .minimap-box{width:110px;height:110px}
+  .speed-num{font-size:30px}
+}

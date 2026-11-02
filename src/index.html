@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>霓虹狂飙 Neon Rush · 午夜街头竞速</title>
+<link rel="preconnect" href="https://miaoda.feishu.cn">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Orbitron:wght@600;800;900&amp;display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b1020'/%3E%3Cpath d='M9 24V10l14 10V8' fill='none' stroke='%2300e5ff' stroke-width='3' stroke-linejoin='round'/%3E%3Ccircle cx='24' cy='24' r='3' fill='%23ff2e88'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2307080f'/%3E%3Cpath d='M14 42 L30 14 L34 28 L50 14 L34 50 Z' fill='%2300e5ff'/%3E%3Ccircle cx='45' cy='46' r='6' fill='%23ff2e88'/%3E%3C/svg%3E">
+<style>/*__CSS__*/
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="app">
+
+  <!-- ===== 视图：主菜单 ===== -->
+  <section id="view-menu" class="view">
+    <header class="menu-top">
+      <div class="logo-mini">NEON RUSH</div>
+      <button class="icon-btn" id="muteBtn" title="声音开关" role="switch" aria-checked="true" aria-label="声音开关">
+        <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>
+      </button>
+    </header>
+    <div class="menu-wrap">
+      <div>
+        <h1 class="title">霓虹狂飙</h1>
+        <p class="subtitle">Neon Rush · Midnight Street Racing</p>
+      </div>
+
+      <div class="car-selector">
+        <button class="arrow" id="carPrev" aria-label="上一辆车"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M15 4 7 12l8 8 2-2-6-6 6-6z"/></svg></button>
+        <div class="car-card" id="carCard">
+          <div class="car-head">
+            <div>
+              <div class="car-name" id="carName">GT-01 疾风</div>
+              <div class="car-class" id="carClass">平衡型 · 街头跑车</div>
+            </div>
+            <div class="car-chip" id="carChip"></div>
+          </div>
+          <div class="car-stats" id="carStats"></div>
+          <div class="car-spec" id="carSpec"></div>
+          <div class="car-modeling" id="carModeling" style="display:none;font-size:11px;color:var(--dim);letter-spacing:.06em;margin-top:6px">加载车辆模型中…</div>
+        </div>
+        <button class="arrow" id="carNext" aria-label="下一辆车"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M9 4l-2 2 6 6-6 6 2 2 8-8z"/></svg></button>
+      </div>
+
+      <div class="track-selector">
+        <button class="arrow" id="trackPrev" aria-label="上一条赛道"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M15 4 7 12l8 8 2-2-6-6 6-6z"/></svg></button>
+        <div class="track-row" id="trackRow"></div>
+        <button class="arrow" id="trackNext" aria-label="下一条赛道"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M9 4l-2 2 6 6-6 6 2 2 8-8z"/></svg></button>
+      </div>
+
+      <button class="start-btn" id="startBtn">开 始 比 赛</button>
+
+      <div class="controls-hint">
+        <div class="hint-col">
+          <h4>键盘</h4>
+          <div class="hint-row"><b>加速</b><span class="key">W</span><span class="key">↑</span></div>
+          <div class="hint-row"><b>刹车 / 倒车</b><span class="key">S</span><span class="key">↓</span></div>
+          <div class="hint-row"><b>转向</b><span class="key">A</span><span class="key">D</span><span class="key" style="opacity:.65">T 反向</span></div>
+          <div class="hint-row"><b>手刹漂移</b><span class="key">Shift</span></div>
+          <div class="hint-row"><b>氮气加速</b><span class="key">空格</span></div>
+          <div class="hint-row"><b>切换视角 / 地图 / 暂停</b><span class="key">C</span><span class="key">M</span><span class="key">Esc</span></div>
+        </div>
+        <div class="hint-col">
+          <h4>手柄</h4>
+          <div class="hint-row"><b>转向</b><span class="key">左摇杆</span></div>
+          <div class="hint-row"><b>加速 / 刹车</b><span class="key">RT</span><span class="key">LT</span></div>
+          <div class="hint-row"><b>手刹漂移</b><span class="key">A</span></div>
+          <div class="hint-row"><b>氮气 / 切换视角</b><span class="key">LB</span><span class="key">B</span></div>
+          <div class="hint-row"><b>暂停</b><span class="key">Start</span></div>
+          <div class="hint-row"><b>菜单选择</b><span class="key">方向键 / A</span></div>
+        </div>
+      </div>
+
+      <div class="gp-status" id="gpStatus">未检测到手柄 · 点击画面后可用键盘操作</div>
+      <div class="legend-tip">氮气：空格 / LB 喷射 · 漂移甩尾（Shift / A）可回充氮气 · 按 H 进入沉浸模式（隐藏 HUD）</div>
+    </div>
+  </section>
+
+  <!-- ===== 视图：比赛 HUD ===== -->
+  <section id="view-hud" class="view hidden">
+    <div class="hud">
+      <div class="hud-top-left">
+        <div class="hud-chip"><div class="lab">LAP · 圈数</div><div class="val"><em id="hudLap">1</em><span id="hudLapTotal">/2</span></div></div>
+        <div class="hud-chip"><div class="lab">POS · 名次</div><div class="val"><em id="hudPos">1</em><span id="hudPosTotal">/6</span></div></div>
+      </div>
+      <div class="hud-top-right">
+        <div class="hud-chip"><div class="lab">LAP TIME · 单圈</div><div class="val" id="hudTime">0:00.000</div></div>
+        <div class="hud-chip"><div class="lab">BEST · 最佳</div><div class="val" id="hudBest">--:--.---</div></div>
+        <button class="icon-btn" id="hudMute" role="switch" aria-checked="true" aria-label="声音开关">
+          <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>
+        </button>
+      </div>
+
+      <div class="countdown" id="countdown"></div>
+      <div class="wrongway" id="wrongway"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style="vertical-align:-3px"><path d="M12 2 3 20h18z"/></svg> 方向错误</div>
+      <div class="focus-hint" id="focusHint">未检测到操作 · 请点击画面后按 W / ↑ 加速</div>
+      <div class="focus-hint" id="flipToast" style="display:none;top:9.5%;color:#7df9ff;"></div>
+      <div class="drift-pop" id="driftPop">DRIFT +120</div>
+
+      <div class="speed-panel">
+        <div class="speed-box">
+          <span class="speed-num" id="hudSpeed">0</span>
+          <span class="speed-unit" id="hudUnit">km/h</span>
+        </div>
+        <div class="nitro-box">
+          <div class="nitro-lab"><span>NITRO · 氮气</span><b id="hudGear">N</b></div>
+          <div class="nitro-bar"><div class="nitro-fill" id="nitroFill"></div></div>
+        </div>
+      </div>
+
+      <div class="minimap-box">
+        <span class="minimap-tag">RADAR</span>
+        <canvas id="miniMap"></canvas>
+      </div>
+
+      <div id="speedLines"></div>
+
+      <div id="pauseOverlay">
+        <div class="pause-panel">
+          <h2>暂 停</h2>
+          <button class="menu-btn primary" id="resumeBtn">继续比赛</button>
+          <button class="menu-btn" id="restartBtn">重新开始</button>
+          <button class="menu-btn danger" id="quitBtn">返回菜单</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 视图：比赛结果 ===== -->
+  <section id="view-result" class="view hidden">
+    <div class="result-panel">
+      <div class="result-head">
+        <div class="result-title" id="resultTitle">冲 线 完 成</div>
+        <div class="result-sub" id="resultSub">霓虹都市环线 · 2 圈</div>
+      </div>
+      <table class="standings">
+        <thead><tr><th>#</th><th>车手</th><th>赛车</th><th class="time-col">用时 / 状态</th></tr></thead>
+        <tbody id="standingsBody"></tbody>
+      </table>
+      <div class="result-btns">
+        <button class="menu-btn primary" id="againBtn">再来一局</button>
+        <button class="menu-btn" id="menuBtn">返回菜单</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Toast ===== -->
+  <div id="toast" role="status"></div>
+
+  <!-- ===== 大地图 ===== -->
+  <section id="mapOverlay">
+    <div class="map-panel">
+      <button class="map-close" id="mapClose" aria-label="关闭地图"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7 2.9 18.3 9.2 12 2.9 5.7 4.3 4.3l6.3 6.3 6.3-6.3z" transform="translate(2 2) scale(0.8)"/></svg></button>
+      <h3 id="mapTitle">TRACK MAP</h3>
+      <canvas id="bigMap"></canvas>
+      <div class="map-legend">
+        <span><i style="background:var(--cyan)"></i>玩家</span>
+        <span><i style="background:var(--pink)"></i>对手</span>
+        <span><i style="background:var(--amber)"></i>起点</span>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script src="https://fastly.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://fastly.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/Pass.js"></script>
+<script src="https://fastly.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://fastly.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://fastly.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://fastly.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://fastly.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://fastly.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="https://fastly.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://fastly.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/DRACOLoader.js"></script>
+<script>
+'use strict';
+/*__ASSETS__*/
+/*__GAME__*/
+</script>
+</body>
+</html>
