@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-"""霓虹狂飙 Neon Rush 单文件构建脚本。
+"""霓虹狂飙 Neon Rush 构建脚本。
 
-把 src/ 下的模板、样式、游戏模块与 assets/ 内的 glTF 模型、Draco 解码器
-内嵌为一个可直接双击运行的 HTML（默认输出到项目根目录 霓虹狂飙.html）。
+默认把 src/ 下的模板、样式、游戏模块与 assets/ 内的 glTF 模型、Draco 解码器
+内嵌为单个 HTML（输出到项目根目录 霓虹狂飙.html，可双击离线运行）。
 
 用法:
-    python tools/build.py
+    python tools/build.py             # 单文件离线版
+    python tools/build.py --online    # 在线版：模型作为独立文件放 _site/assets，页面体积小得多
 """
 import base64
 import io
 import json
 import os
+import shutil
 import sys
 import tempfile
 
@@ -58,16 +60,24 @@ def b64(path):
 
 
 def main():
+    online = '--online' in sys.argv[1:]
     for path in [p for _, p in ASSETS] + [DRACO_WASM, DRACO_WRAPPER] + LIBS:
         if not os.path.isfile(path):
             sys.exit('缺少资源文件: ' + path)
 
     lines = []
+    lines.append('/* ===== 资源加载方式（构建时生成，请勿手改） ===== */')
+    lines.append('const ASSET_URL_MODE = %s;' % ('true' if online else 'false'))
     lines.append('/* ===== 内嵌资源（构建时生成，请勿手改） ===== */')
     for name, path in ASSETS:
-        data = b64(path)
-        lines.append('const %s = "%s";' % (name, data))
-        print('  %-14s %8.2f MB (base64)' % (name, len(data) / 1048576.0))
+        if online:
+            rel = 'assets/' + os.path.basename(path)
+            lines.append('const %s = "%s";' % (name, rel))
+            print('  %-14s %8.2f MB (外链)' % (name, os.path.getsize(path) / 1048576.0))
+        else:
+            data = b64(path)
+            lines.append('const %s = "%s";' % (name, data))
+            print('  %-14s %8.2f MB (base64)' % (name, len(data) / 1048576.0))
     wrapper = read(DRACO_WRAPPER)
     lines.append('const DRACO_WRAPPER_JS = %s;' % json.dumps(wrapper, ensure_ascii=False))
     lines.append('const DRACO_WASM_B64 = "%s";' % b64(DRACO_WASM))
@@ -94,15 +104,25 @@ def main():
         assert token in html, '模板缺少占位符 ' + token
         html = html.replace(token, block, 1)
 
-    with io.open(OUT, 'w', encoding='utf-8') as f:
+    out = os.path.join(ROOT, '_site', 'index.html') if online else OUT
+    out_dir = os.path.dirname(out)
+    if not os.path.isdir(out_dir):
+        os.makedirs(out_dir)
+    with io.open(out, 'w', encoding='utf-8') as f:
         f.write(html)
+    if online:
+        asset_dir = os.path.join(out_dir, 'assets')
+        if not os.path.isdir(asset_dir):
+            os.makedirs(asset_dir)
+        for _, path in ASSETS:
+            shutil.copy2(path, asset_dir)
 
     # 供 node --check 使用的纯 JS 副本（写到临时目录，不污染工程）
     check = os.path.join(tempfile.gettempdir(), 'neon_rush_check.js')
     with io.open(check, 'w', encoding='utf-8') as f:
         f.write("'use strict';\n" + assets_block + '\n\n' + game_block + '\n')
 
-    print('输出: %s (%.2f MB)' % (OUT, os.path.getsize(OUT) / 1048576.0))
+    print('输出: %s (%.2f MB)' % (out, os.path.getsize(out) / 1048576.0))
     print('语法检查副本: %s' % check)
 
 

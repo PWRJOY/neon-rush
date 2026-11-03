@@ -24,14 +24,11 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Build single-file game
-        run: python tools/build.py
+      - name: Build online site
+        run: python tools/build.py --online
 
-      - name: Prepare site
-        run: |
-          mkdir -p _site
-          cp 霓虹狂飙.html _site/index.html
-          ls -lh _site
+      - name: Show site contents
+        run: ls -lh _site _site/assets
 
       - uses: actions/upload-pages-artifact@v3
         with:

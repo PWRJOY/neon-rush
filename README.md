@@ -11,7 +11,7 @@
 
 <https://pwrjoy.github.io/neon-rush/>
 
-推送到 `main` 后由 GitHub Actions 自动构建并发布到 GitHub Pages，构建产物不入库。
+推送到 `main` 后由 GitHub Actions 用 `python tools/build.py --online` 构建并发布到 GitHub Pages。在线版把模型拆成独立的 `assets/*.glb`，页面本体只有约 2MB，模型并行加载并可被浏览器缓存；构建产物不入库。
 
 ## 快速开始
 

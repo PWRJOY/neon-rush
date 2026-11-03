@@ -6,6 +6,17 @@ let carModelReady = false;
 let carModelCache = {};
 /* 内嵌 Draco 解码器（glue 文本 + wasm base64）——file:// 下无法 fetch wasm，故内嵌后本地实例化 */
 function base64ToUint8(s){ const b = atob(s); const u = new Uint8Array(b.length); for(let i=0;i<b.length;i++) u[i] = b.charCodeAt(i); return u; }
+/* 资源加载：本地单文件模式解码内嵌 base64；在线模式按 URL 拉取（ASSET_URL_MODE 由构建脚本注入） */
+function assetBuffer(src, cb){
+  if(typeof ASSET_URL_MODE !== 'undefined' && ASSET_URL_MODE){
+    const fl = new THREE.FileLoader();
+    fl.setResponseType('arraybuffer');
+    fl.load(src, buf=>cb(buf), undefined, err=>{ console.error('资源加载失败 ['+src+']', err); cb(null); });
+  } else {
+    const u = base64ToUint8(src);
+    cb(u.buffer.slice(u.byteOffset, u.byteOffset + u.byteLength));
+  }
+}
 /* Draco worker 库本地注入：file:// 无法 fetch wasm，patch DRACOLoader._loadLibrary */
 let gDracoLoader = null;
 function makeDracoLoader(){
@@ -32,10 +43,11 @@ const CAR_MODELS = {
 };
 function parseCarModel(key, cb){
   const def = CAR_MODELS[key];
+  assetBuffer(def.b64, (buf)=>{
+  if(!buf){ carModelCache[key] = null; cb && cb(); return; }
   const loader = new THREE.GLTFLoader();
   loader.setDRACOLoader(makeDracoLoader());
-  const u = base64ToUint8(def.b64);
-  loader.parse(u.buffer.slice(u.byteOffset, u.byteOffset + u.byteLength), '', (gltf)=>{
+  loader.parse(buf, '', (gltf)=>{
     const src = gltf.scene;
     src.traverse(o=>{ if(o.isMesh){ o.castShadow = true; o.receiveShadow = false; } });
     // 剔除示例相机等非渲染节点
@@ -67,6 +79,7 @@ function parseCarModel(key, cb){
     carModelCache[key] = { group: src, def };
     cb && cb();
   }, (err)=>{ console.error('gltf parse fail ['+key+']', err); carModelCache[key] = null; cb && cb(); });
+  });
 }
 function loadCarModel(cb){
   if(carModelReady){ cb && cb(); return; }
@@ -234,10 +247,12 @@ function mergeSceneGeometry(root, def){
 }
 function parseSceneModel(key, cb){
   const def = SCENE_MODELS[key];
+  assetBuffer(def.b64, (buf)=>{
+  if(!buf){ sceneModelCache[key] = null; cb && cb(); return; }
   const loader = new THREE.GLTFLoader();
-  const u = base64ToUint8(def.b64);
-  loader.parse(u.buffer.slice(u.byteOffset, u.byteOffset + u.byteLength), '', (gltf)=>{
+  loader.parse(buf, '', (gltf)=>{
     sceneModelCache[key] = mergeSceneGeometry(gltf.scene, def);
     cb && cb();
   }, (err)=>{ console.error('scene glb parse fail ['+key+']', err); sceneModelCache[key] = null; cb && cb(); });
+  });
 }

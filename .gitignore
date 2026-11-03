@@ -6,6 +6,7 @@ assets/cars_inbox/
 
 # 构建产物：由 tools/build.py 生成，发布走 GitHub Releases，不进版本库
 霓虹狂飙.html
+_site/
 
 # 测试截图与临时产物
 .screenshots/
